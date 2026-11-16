@@ -1,0 +1,28 @@
+name: Release
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify version and reproducible bundle
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          manifest = json.loads(Path("manifest.json").read_text())
+          if manifest["version"] != os.environ["GITHUB_REF_NAME"]:
+              raise SystemExit("Tag must match manifest version exactly, without a v prefix")
+          PY
+          python3 build.py
+          git diff --exit-code -- main.js
+          node --check main.js
+      - name: Publish GitHub release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
