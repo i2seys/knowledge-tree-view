@@ -14,10 +14,10 @@ are not included in the plugin.
 1. Install and enable **BRAT** from Obsidian's Community plugins on each device.
 2. In **BRAT → Add beta plugin**, enter **`i2seys/knowledge-tree-view`** or paste
    the [repository URL](https://github.com/i2seys/knowledge-tree-view).
-3. Select **1.1.0** or **Latest**, install, and enable **Knowledge Tree View**.
+3. Select **1.2.0** or **Latest**, install, and enable **Knowledge Tree View**.
 4. Run **Knowledge Tree View: Открыть дерево знаний** from the command palette.
 
-Release files: [version 1.1.0](https://github.com/i2seys/knowledge-tree-view/releases/tag/1.1.0).
+Release files: [version 1.2.0](https://github.com/i2seys/knowledge-tree-view/releases/tag/1.2.0).
 
 BRAT chooses the vault's actual configuration directory, including custom
 configuration folder names. Windows, macOS, Linux, Android and iOS do not need
@@ -47,6 +47,12 @@ blank means the tree root. Status values are `todo`, `studying`, and `known`.
 `title` is optional and defaults to the filename. `order` is an optional finite
 decimal number. Change properties and write explanations in Obsidian notes;
 the tree updates when Obsidian's metadata cache updates. The UI is read-only.
+
+Titles beginning with **`(und)`** are shown at reduced opacity. Matching ignores
+leading whitespace and letter case; no space is required after the prefix.
+The prefix stays visible, and hovering, focusing or selecting restores opacity.
+These branches and leaves remain clickable and included in all progress counts;
+the prefix does not change their status or remove topics from the tree.
 
 Only `id`, `parent`, `title`, `status`, `order` and a relative note path enter
 the viewer. Bodies, positions and unrelated properties are never copied.
@@ -78,7 +84,7 @@ The unbundled bridge's HTML fallback exists only for local development.
    Topic notes, curricula, vault configuration and credentials do not belong
    in this repository.
 3. Create a version tag matching `manifest.json` exactly, without a `v` prefix.
-   For the current version, use **`1.1.0`**.
+   For the current version, use **`1.2.0`**.
 4. GitHub Releases must include **`main.js`** and **`manifest.json`** as individual
    assets. `styles.css` is unnecessary because this viewer has inline styles.
 
