@@ -17,6 +17,14 @@ function relevantPath(path) {
   return typeof path === 'string' && (path === TREE_DIRECTORY || path === TOPICS_DIRECTORY || path.startsWith(TOPICS_PREFIX));
 }
 
+function topicFiles(app) {
+  return app.vault.getMarkdownFiles().filter(file => {
+    if (typeof file.path !== 'string' || !file.path.startsWith(TOPICS_PREFIX)) return false;
+    const segments = file.path.slice(TOPICS_PREFIX.length).split('/');
+    return segments.every(part => part && !part.startsWith('.') && part !== '..');
+  });
+}
+
 function textProperty(value, field, path, fallback) {
   if (value === undefined || value === null || value === '') return fallback;
   if (typeof value !== 'string') throw new Error(path + ': свойство ' + field + ' должно быть строкой.');
@@ -24,11 +32,7 @@ function textProperty(value, field, path, fallback) {
 }
 
 function collectNotes(app) {
-  const files = app.vault.getMarkdownFiles().filter(file => {
-    if (typeof file.path !== 'string' || !file.path.startsWith(TOPICS_PREFIX)) return false;
-    const segments = file.path.slice(TOPICS_PREFIX.length).split('/');
-    return segments.every(part => part && !part.startsWith('.') && part !== '..');
-  }).sort((a, b) => a.path.localeCompare(b.path));
+  const files = topicFiles(app).sort((a, b) => a.path.localeCompare(b.path));
 
   return files.map(file => {
     const path = file.path.slice(TREE_DIRECTORY.length + 1);
@@ -79,6 +83,7 @@ class KnowledgeTreeView extends ItemView {
     this.hostWindow = null;
     this.messageListener = null;
     this.openGeneration = 0;
+    this.openingNote = false;
   }
 
   getViewType() { return VIEW_TYPE; }
@@ -101,6 +106,10 @@ class KnowledgeTreeView extends ItemView {
     this.messageListener = event => {
       if (this.closed || !this.frame || event.source !== this.frame.contentWindow) return;
       if (!event.data || typeof event.data !== 'object') return;
+      if (event.data.type === 'knowledge-tree-open-note') {
+        void this.openNote(event.data.id);
+        return;
+      }
       if (event.data.type !== 'knowledge-tree-ready' && event.data.type !== 'knowledge-tree-refresh') return;
       this.frameReady = true;
       this.queueRefresh(true);
@@ -145,6 +154,37 @@ class KnowledgeTreeView extends ItemView {
     }
   }
 
+  async openNote(id) {
+    if (this.closed || this.openingNote || typeof id !== 'string' || !id || id.length > 256 || /\s/.test(id)) return;
+    this.openingNote = true;
+    const generation = this.openGeneration;
+    try {
+      // Resolve a stable topic ID against current vault metadata, including
+      // renames since the last render. The iframe cannot supply a file path.
+      const matches = topicFiles(this.app).filter(file => {
+        const value = this.app.metadataCache.getFileCache(file)?.frontmatter?.id;
+        return typeof value === 'string' && value.trim() === id;
+      });
+      if (!matches.length) {
+        new Notice('Заметка темы не найдена. Дождитесь синхронизации и обновите дерево.');
+        return;
+      }
+      if (matches.length !== 1) {
+        new Notice('У нескольких заметок одинаковый id. Исправьте свойства тем и обновите дерево.');
+        return;
+      }
+      const leaf = this.app.workspace.getLeaf('tab');
+      await leaf.openFile(matches[0], { active: true });
+      if (!this.closed && generation === this.openGeneration) await this.app.workspace.revealLeaf(leaf);
+    } catch (_error) {
+      if (!this.closed && generation === this.openGeneration) {
+        new Notice('Не удалось открыть заметку темы. Попробуйте ещё раз.');
+      }
+    } finally {
+      if (generation === this.openGeneration) this.openingNote = false;
+    }
+  }
+
   queueRefresh(force) {
     if (this.closed) return;
     this.forceRefresh = this.forceRefresh || force;
@@ -184,6 +224,7 @@ class KnowledgeTreeView extends ItemView {
     if (this.timer !== null && this.hostWindow) this.hostWindow.clearTimeout(this.timer);
     this.timer = null;
     this.forceRefresh = false;
+    this.openingNote = false;
     if (this.hostWindow && this.messageListener) this.hostWindow.removeEventListener('message', this.messageListener);
     this.messageListener = null;
     for (const { owner, reference } of this.eventRefs) owner.offref(reference);

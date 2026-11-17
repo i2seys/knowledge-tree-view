@@ -1,7 +1,7 @@
 {
   "id": "knowledge-tree-view",
   "name": "Knowledge Tree View",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "minAppVersion": "1.5.0",
   "description": "Локальное дерево знаний из свойств заметок KnowledgeTree/topics. Только просмотр.",
   "author": "i2seys",
