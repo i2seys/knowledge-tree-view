@@ -29,17 +29,198 @@ header{align-items:center}.title-group{min-width:0}.source{font-size:11px;color:
 .note-open:hover,.note-open:focus-visible{color:var(--green);background:var(--green-bg)}
 .note-open.deferred{opacity:.6}
 .note-open.deferred:hover,.note-open.deferred:focus,.note-open.selected{opacity:1}
+.node.leaf.has-note{padding-left:44px}
+.node.leaf.has-note .symbol{display:none}
+.node.branch.has-note{padding-right:44px}
+.node.branch.has-note .label{padding-right:0}
+.status-cycle{position:absolute;z-index:1;width:44px;height:44px;border:0;border-radius:8px;background:transparent;color:var(--muted);padding:0;display:grid;place-items:center;font-size:18px;line-height:1}
+.status-cycle[data-status=studying]{color:var(--amber)}
+.status-cycle[data-status=known]{color:var(--green)}
+.status-cycle:hover,.status-cycle:focus-visible{background:var(--paper);box-shadow:inset 0 0 0 1px var(--line)}
+.status-cycle.deferred{opacity:.6}
+.status-cycle.deferred:hover,.status-cycle.deferred:focus,.status-cycle.selected{opacity:1}
+.action:disabled{opacity:.55;cursor:default}
+.count{max-width:100%;margin-inline-start:auto;text-align:right;color:var(--ink)}
+.workspace{position:relative;display:flex;flex:1;min-height:0;overflow:hidden}
+.workspace>.board,.card-list{flex:1;min-width:0}
+.views,.shortcuts,.filters,.review-actions,.ratings{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.action[aria-pressed=true]{background:var(--green-bg);border-color:var(--green)}
+.card-list{display:flex;flex-direction:column;min-height:0;padding:16px 20px}
+.filters label,.review-pane label{display:grid;gap:4px}
+.filters{padding-bottom:10px;border-bottom:1px solid var(--line);align-items:end}
+.filters label,.field-label{color:var(--muted);font-size:12px}
+select,input{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:7px;min-height:38px;max-width:100%;padding:5px 8px}
+.list-scroll{overflow:auto;min-height:0}
+.card-rows{list-style:none;padding:0;margin:0}
+.card-row{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:8px 0}
+.card-row.selected{background:var(--review-bg,var(--green-bg))}
+.list-status,.list-open,.list-symbol{min-height:44px;min-width:44px;border:0;border-radius:7px;background:transparent}
+.list-symbol{display:grid;place-items:center}
+.card-row button:hover{background:var(--green-bg)}
+.list-title{display:block;text-align:left;border:0;border-radius:6px;background:transparent;padding:5px 6px;max-width:100%;min-height:34px;font-weight:600;overflow-wrap:anywhere}
+.card-label{display:block;padding:0 6px;font-weight:600;overflow-wrap:anywhere}
+.list-path,.list-progress{display:block;margin-left:6px;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.list-empty,.list-size{color:var(--muted);font-size:12px}
+.review-pane{flex:0 0 min(370px,45%);min-width:0;overflow:auto;background:var(--paper);border-left:1px solid var(--line);padding:16px}
+.review-pane h2{font-size:16px;line-height:1.35;margin:0 0 8px;overflow-wrap:anywhere}
+.review-pane form,.review-panel{display:grid;gap:10px}
+.review-pane p{margin:0;font-size:12px}
+.review-subtitle{color:var(--muted)}
+.review-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.review-table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
+.review-table th,.review-table td{padding:5px 4px;border-bottom:1px solid var(--line)}
+.review-table input{width:100%;min-width:0}
+.ratings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.grade{min-height:44px;border:1px solid transparent;border-radius:7px}
+.grade[aria-pressed=true]{outline:2px solid currentColor;outline-offset:1px}
+.grade[data-grade=again]{background:light-dark(#fae3df,#532f2d);color:light-dark(#892c24,#ffd0ca)}
+.grade[data-grade=hard]{background:light-dark(#faebd8,#533b28);color:light-dark(#79430e,#ffdaa8)}
+.grade[data-grade=good]{background:light-dark(#e0f0e2,#294739);color:light-dark(#215833,#b0e1bc)}
+.grade[data-grade=easy]{background:light-dark(#e0f0f9,#294454);color:light-dark(#195471,#bae7fd)}
+.review-result{color:var(--green);font-weight:600}
+.review-error{color:var(--amber)}
+.review-error:empty,.operation-status:empty{display:none}
+.operation-status{padding:7px 18px;font-size:12px;color:var(--muted);background:var(--paper)}
+.legend{flex-wrap:wrap}
+:root{
+  --review-muted-green:light-dark(#526957,#a3b2a1);
+  --review-muted-green-bg:light-dark(#e9eee7,#303c33);
+  --review-purple:light-dark(#71468e,#e0bef7);
+  --review-purple-bg:light-dark(#f0e7f6,#463651)
+}
+[data-review=overdue]{--review-ink:var(--review-muted-green);--review-bg:var(--review-muted-green-bg)}
+[data-review=exempt]{--review-ink:var(--review-purple);--review-bg:var(--review-purple-bg)}
+.node.leaf[data-status=known]{background:var(--review-bg,var(--green-bg))}
+.node.leaf[data-status=known] .symbol,.status-cycle[data-status=known],.list-status[data-status=known],.list-symbol[data-status=known]{
+  color:var(--review-ink,var(--green))
+}
+.list-status[data-status=known],.list-symbol[data-status=known]{background:var(--review-bg,var(--green-bg))}
+.list-status[data-status=studying],.list-symbol[data-status=studying]{color:var(--amber)}
+.list-status[data-status=todo],.list-symbol[data-status=todo]{color:var(--muted)}
+.card-row[data-review] .list-progress{color:var(--review-ink,var(--green))}
+#review-exempt[aria-pressed=true]{color:var(--review-purple);background:var(--review-purple-bg);border-color:var(--review-purple)}
+.branch-counts{gap:4px;font-size:11px}
+.branch-counts .metric{gap:2px}
+.branch-counts .metric-mark{font-size:11px}
+.node.leaf.scheduled{display:grid;grid-template-columns:17px minmax(0,1fr);align-content:center;gap:4px 8px}
+.node.leaf.scheduled.has-note{grid-template-columns:minmax(0,1fr)}
+.node.leaf.scheduled .label{-webkit-line-clamp:2}
+.node-dates{grid-column:2;font-size:10px;line-height:1.3;color:var(--muted)}
+.node.has-note .node-dates{grid-column:1}
+.node-dates span{display:block}
+.node-dates[data-review]{color:var(--review-ink,var(--muted))}
+@media(max-width:680px){
+  .workspace{flex-direction:column}
+  .card-list{padding:12px}
+  .review-pane{flex:0 0 auto;max-height:52%;border:0;border-top:1px solid var(--line);padding:12px}
+  .filters{gap:6px}
+}
 </style></head><body><main class="app">
-<header><div class="title-group"><h1>Мои знания</h1><div class="source" id="source" role="status" aria-live="polite">Источник — Markdown-заметки Obsidian</div></div><div class="actions"><button class="action" id="folder" type="button">Папка</button><button class="action" id="refresh" type="button" aria-label="Перечитать заметки">↻ Обновить</button></div></header>
+<header>
+  <div class="title-group"><h1>Мои знания</h1><div class="source" id="source" role="status">Источник — Markdown-заметки Obsidian</div></div>
+  <nav class="views" aria-label="Вид хранилища">
+    <button class="action" id="view-tree" type="button" aria-controls="board" aria-pressed="true">Дерево</button>
+    <button class="action" id="view-cards" type="button" aria-controls="card-list" aria-pressed="false" disabled>Карточки</button>
+  </nav>
+  <div class="shortcuts">
+    <button class="action" id="list-studying" type="button" disabled>В работе</button>
+    <button class="action" id="list-overdue" type="button" disabled>Просрочено</button>
+    <button class="action" id="open-review-settings" type="button" hidden>Настройки сроков</button>
+    <button class="action" id="folder" type="button">Папка</button>
+    <button class="action" id="refresh" type="button" aria-label="Перечитать заметки">↻ Обновить</button>
+  </div>
+</header>
+<div class="workspace">
 <section class="board" id="board" aria-label="Дерево знаний"><div class="world" id="world"><svg id="edges" width="1" height="1" aria-hidden="true"></svg><div id="nodes"></div></div><span class="hint" id="hint">Нажмите на ветку · двигайте дерево</span><button class="crumb" id="back" type="button" hidden></button><div class="selection" id="selection" role="status" aria-live="polite"></div><div class="controls" aria-label="Вид дерева"><button id="less" type="button" aria-label="Уменьшить">−</button><button id="more" type="button" aria-label="Увеличить">+</button><button id="overview" type="button">К корню</button></div>
 <div class="empty" id="empty"><h2>Дерево знаний</h2><p id="welcome-text">Откройте папку KnowledgeTree. Дерево прочитает названия, связи и статусы тем из заметок.</p><button class="action primary" id="choose" type="button">Открыть папку</button><button class="text-button" id="choose-files" type="button">Выбрать файлы .md</button></div>
-<details class="error-panel" id="error" hidden><summary>Источник недоступен или в свойствах есть ошибка</summary><pre id="error-text"></pre></details></section>
-<footer><div class="legend"><span><b class="legend-mark known">✓</b>Изучено</span><span><b class="legend-mark study">◐</b>В процессе</span><span><b class="legend-mark todo">○</b>Не изучено</span></div><span class="count" id="count"></span></footer>
+</section>
+<section class="card-list" id="card-list" aria-label="Список карточек" hidden>
+  <div class="filters">
+    <label>Статус
+      <select id="status-filter">
+        <option value="all">Все</option><option value="todo">Не изучено</option>
+        <option value="studying">В работе</option><option value="known">Изучено</option>
+      </select>
+    </label>
+    <label>Повторение
+      <select id="repeat-filter">
+        <option value="all">Любой срок</option><option value="required">Требуется повторить</option>
+        <option value="overdue">Только просроченные</option>
+      </select>
+    </label>
+    <span class="list-size" id="list-size" role="status"></span>
+  </div>
+  <div class="list-scroll" id="list-scroll">
+    <ul class="card-rows" id="card-rows"></ul>
+    <p class="list-empty" id="list-empty" hidden>Карточек с такими фильтрами нет.</p>
+  </div>
+</section>
+<aside class="review-pane" id="review-pane" aria-label="Повторение карточек" hidden>
+  <div class="review-panel" id="review-panel" hidden>
+    <h2 id="review-title"></h2>
+    <p class="review-subtitle" id="review-history"></p>
+    <button class="action" id="review-exempt" type="button" aria-pressed="false">Повторение не требуется</button>
+    <form id="review-form">
+      <label class="field-label" id="review-date-field">Дата повторения <input id="review-date" type="date" required></label>
+      <div class="ratings" id="review-grades" role="group" aria-label="Как прошёл повтор?">
+        <button class="grade" id="grade-again" data-grade="again" type="button" aria-pressed="false">Забыл</button>
+        <button class="grade" id="grade-hard" data-grade="hard" type="button" aria-pressed="false">Трудно</button>
+        <button class="grade" id="grade-good" data-grade="good" type="button" aria-pressed="false">Помню</button>
+        <button class="grade" id="grade-easy" data-grade="easy" type="button" aria-pressed="false">Легко</button>
+      </div>
+      <p class="review-result" id="review-preview" aria-live="polite"></p>
+      <p class="review-error" id="review-error" role="alert"></p>
+      <div class="review-actions" id="review-actions">
+        <button class="action primary" id="review-save" type="button">Записать повторение</button>
+        <button class="action" id="review-correct" type="button">Исправить дату</button>
+        <button class="action" id="review-close" type="button">Отмена</button>
+      </div>
+      <button class="text-button" id="review-reset" type="button">Сбросить прогресс</button>
+      <div class="review-panel" id="reset-confirm" hidden>
+        <p>Вернуть статус «Не изучено» и удалить расписание этой карточки?</p>
+        <div class="review-actions">
+          <button class="action" id="reset-approve" type="button">Сбросить</button>
+          <button class="action" id="reset-cancel" type="button">Отмена</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="review-panel" id="review-settings" hidden>
+    <h2>Настройки сроков</h2>
+    <form id="review-rules-form">
+      <div class="review-fields">
+        <label class="field-label">Первый повтор, дней <input id="rule-first" type="number" min="1" max="3650" required></label>
+        <label class="field-label">Максимум, дней <input id="rule-cap" type="number" min="1" max="3650" required></label>
+      </div>
+      <table class="review-table">
+        <thead><tr><th>Оценка</th><th>Дни или минимум</th><th>Множитель</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Забыл</th><td><input aria-label="Забыл, дней" id="rule-againMin" type="number" min="1" max="3650" required></td><td>Фикс.</td></tr>
+          <tr><th scope="row">Трудно</th><td><input aria-label="Трудно, минимум" id="rule-hardMin" type="number" min="1" max="3650" required></td><td><input aria-label="Трудно, множитель" id="rule-hardMul" type="number" min="1" max="10" step=".1" required></td></tr>
+          <tr><th scope="row">Помню</th><td><input aria-label="Помню, минимум" id="rule-goodMin" type="number" min="1" max="3650" required></td><td><input aria-label="Помню, множитель" id="rule-goodMul" type="number" min="1" max="10" step=".1" required></td></tr>
+          <tr><th scope="row">Легко</th><td><input aria-label="Легко, минимум" id="rule-easyMin" type="number" min="1" max="3650" required></td><td><input aria-label="Легко, множитель" id="rule-easyMul" type="number" min="1" max="10" step=".1" required></td></tr>
+        </tbody>
+      </table>
+      <p class="review-subtitle">Новые правила действуют при следующем назначении срока.</p>
+      <p class="review-error" id="settings-error" role="alert"></p>
+      <div class="review-actions">
+        <button class="action primary" id="rules-save" type="button">Сохранить настройки</button>
+        <button class="action" id="rules-close" type="button">Отмена</button>
+      </div>
+    </form>
+  </div>
+</aside>
+<details class="error-panel" id="error" hidden><summary>Источник недоступен или в свойствах есть ошибка</summary><pre id="error-text"></pre></details>
+</div>
+<div class="operation-status" id="operation-status" role="status"></div>
+<footer><div class="legend"><span><b class="legend-mark known">✓</b>Изучено</span><span><b class="legend-mark study">◐</b>В работе</span><span><b class="legend-mark todo">○</b>Не изучено</span></div><span class="count" id="count" role="status"></span></footer>
 </main><input id="folder-input" type="file" webkitdirectory directory multiple accept=".md" hidden><input id="files-input" type="file" multiple accept=".md,text/markdown" hidden>
 <script>
 /* Metadata only: note bodies never enter the tree model. */
 const KnowledgeTreeData = (() => {
   const ROOT='knowledge-root', fields=new Set(['id','parent','title','status','order','type']);
+  const statuses=['todo','studying','known'];
+  const scheduleFields=['learned_on','reviewed_on','review_interval_days','review_exempt'];
   const fail=(path,message)=>{throw new Error(path+': '+message);};
   const numeric=/^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/;
   function compareText(a,b){const aa=Array.from(a),bb=Array.from(b);for(let i=0;i<Math.min(aa.length,bb.length);i++){const d=aa[i].codePointAt(0)-bb[i].codePointAt(0);if(d)return d;}return aa.length-bb.length;}
@@ -58,11 +239,22 @@ const KnowledgeTreeData = (() => {
   }
   function parseHeader(text,path){
     const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/);if(lines[0]?.trim()!=='---')fail(path,'не найден блок свойств ---');
-    const result={path};let closed=false,last='';
+    const result={path},seenSchedule=new Set();let closed=false,last='';
     for(let i=1;i<lines.length;i++){
       const line=lines[i],t=line.trim();if(t==='---'||t==='...'){closed=true;break;}if(!t||t.startsWith('#'))continue;
-      if(/^\s/.test(line)){if(fields.has(last))fail(path,'свойство дерева должно быть в одну строку');continue;}
-      const m=line.match(/^([A-Za-z_][\w-]*)\s*:\s*(.*?)\s*$/);if(!m)fail(path,'ожидается имя: значение');last=m[1];if(!fields.has(last))continue;
+      if(/^\s/.test(line)||(scheduleFields.includes(last)&&/^-(?:\s|$)/.test(t))){
+        if(fields.has(last))fail(path,'свойство дерева должно быть в одну строку');
+        if(scheduleFields.includes(last))delete result[last];
+        continue;
+      }
+      const m=line.match(/^([A-Za-z_][\w-]*)\s*:\s*(.*?)\s*$/);if(!m)fail(path,'ожидается имя: значение');last=m[1];
+      if(scheduleFields.includes(last)){
+        if(seenSchedule.has(last)){delete result[last];continue;}
+        seenSchedule.add(last);
+        try{result[last]=scalar(m[2],path);}catch{}
+        continue;
+      }
+      if(!fields.has(last))continue;
       if(Object.hasOwn(result,last))fail(path,'повтор свойства '+last);result[last]=scalar(m[2],path);
     }
     if(!closed)fail(path,'не найден конец свойств --- (лимит 64 КБ)');return result;
@@ -73,10 +265,10 @@ const KnowledgeTreeData = (() => {
       const path=String(raw.path||'заметка');
       for(const key of ['id','parent','title','status','order'])if(raw[key]!=null&&!['string','number'].includes(typeof raw[key]))fail(path,'свойство '+key+' должно быть простым значением');
       const id=String(raw.id||'').trim();if(!id||id.length>256||/\s/.test(id))fail(path,'нужен уникальный id без пробелов');if(nodes.has(id))fail(path,'повторяющийся или зарезервированный id '+id);
-      const parent=String(raw.parent||ROOT).trim()||ROOT,status=String(raw.status||'todo').trim(),title=String(raw.title||path.split('/').pop().replace(/\.md$/i,'')).trim(),orderText=String(raw.order??'').trim();
+      const parent=String(raw.parent||ROOT).trim()||ROOT,status=normalizeStatus(String(raw.status||'todo').trim()),title=String(raw.title||path.split('/').pop().replace(/\.md$/i,'')).trim(),orderText=String(raw.order??'').trim();
       if(orderText&&!numeric.test(orderText))fail(path,'order должен быть десятичным числом');const order=Number(orderText||0);
-      if(!['todo','studying','known'].includes(status))fail(path,'status: todo, studying или known');if(!title)fail(path,'пустое название');if(!Number.isFinite(order))fail(path,'order должен быть числом');
-      const n={id,title,status,path};nodes.set(id,n);clean.push({n,parent,order,path});
+      if(!statuses.includes(status))fail(path,'status: todo, studying или known');if(!title)fail(path,'пустое название');if(!Number.isFinite(order))fail(path,'order должен быть числом');
+      const n={id,title,status,path,...readSchedule(raw)};nodes.set(id,n);clean.push({n,parent,order,path});
     }catch(e){errors.push(e.message);}}
     for(const item of clean)if(!nodes.has(item.parent))errors.push(item.path+': не найден parent '+item.parent);
     const parents=new Map(clean.map(x=>[x.n.id,x.parent])),done=new Set();
@@ -86,18 +278,605 @@ const KnowledgeTreeData = (() => {
     for(const [id,list]of groups){list.sort((a,b)=>a.order-b.order||compareText(a.n.title.toLowerCase(),b.n.title.toLowerCase())||compareText(a.n.id,b.n.id));nodes.get(id).children=list.map(x=>x.n);}
     return nodes.get(ROOT);
   }
-  function aggregate(n){const r={known:0,studying:0,todo:0,total:0};if(!n.children?.length){if(n.id!==ROOT){r[n.status||'todo']=1;r.total=1;}return r;}for(const child of n.children){const c=aggregate(child);for(const key of ['known','studying','todo','total'])r[key]+=c[key];}return r;}
-  return {parseHeader,buildTree,aggregate};
+  function dateOnly(value){
+    if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)||value.startsWith('0000'))return '';
+    const date=new Date(value+'T00:00:00Z');
+    return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value?value:'';
+  }
+  function localDay(date=new Date()){
+    const pad=n=>String(n).padStart(2,'0');
+    return String(date.getFullYear()).padStart(4,'0')+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate());
+  }
+  function addDays(day,count){
+    const date=new Date(day+'T00:00:00Z');
+    date.setUTCDate(date.getUTCDate()+count);
+    return date.toISOString().split('T')[0];
+  }
+  function readSchedule(record){
+    const fields={};
+    for(const key of ['learned_on','reviewed_on']){
+      const day=dateOnly(typeof record[key]==='string'?record[key].trim():'');
+      if(day)fields[key]=day;
+    }
+    const raw=record.review_interval_days;
+    const interval=typeof raw==='string'&&/^[0-9]{1,4}$/.test(raw.trim())?Number(raw):raw;
+    if(Number.isInteger(interval)&&interval>=1&&interval<=3650)fields.review_interval_days=interval;
+    const exempt=record.review_exempt;
+    if(exempt===true||(typeof exempt==='string'&&exempt.trim().toLowerCase()==='true'))fields.review_exempt=true;
+    return fields;
+  }
+  function normalizeStatus(status){return status==='repeated'?'known':status;}
+  function eligible(n){return n.status==='known';}
+  function dueOn(n,today=localDay()){
+    if(!eligible(n)||n.review_exempt)return '';
+    const day=n.reviewed_on&&n.reviewed_on<=today?n.reviewed_on:n.learned_on;
+    return day&&day<=today&&n.review_interval_days?addDays(day,n.review_interval_days):'';
+  }
+  function aggregate(n){
+    const result={known:0,studying:0,todo:0,total:0};
+    if(!n.children?.length){
+      if(n.id!==ROOT){result[n.status||'todo']=1;result.total=1;}
+      return result;
+    }
+    for(const child of n.children){
+      const counts=aggregate(child);
+      for(const key of Object.keys(result))result[key]+=counts[key];
+    }
+    return result;
+  }
+  return {parseHeader,buildTree,aggregate,statuses,dateOnly,localDay,addDays,readSchedule,eligible,dueOn,normalizeStatus};
 })();
 
-(()=>{'use strict';const $=id=>document.getElementById(id),board=$('board'),world=$('world');let tree=null;const W=180,H=94,X=218,Y=110;const byId=new Map();function index(n,path=[]){byId.set(n.id,{n,path});(n.children||[]).forEach(c=>index(c,path.concat(n.id)));}const labels={todo:'Не изучено',studying:'В процессе',known:'Изучено'},symbols={todo:'○',studying:'◐',known:'✓'},aggregate=KnowledgeTreeData.aggregate;let opened=new Set(['knowledge-root']),positions=new Map(),visible=[],edges=[],camera={x:0,y:0,z:1},selected=null,focus='knowledge-root',size=null;let pointers=new Map(),drag=null,pinch=null,moved=false,lastPointer=0;const mobile=()=>board.clientWidth<620;
+(()=>{'use strict';const $=id=>document.getElementById(id),board=$('board'),world=$('world');let tree=null;const W=180,H=94,X=218,Y=110;const byId=new Map();
+const {aggregate,dateOnly,localDay,addDays,eligible,dueOn,readSchedule,normalizeStatus}=KnowledgeTreeData;
+function index(n,path=[]){
+  n.status=normalizeStatus(n.status);
+  byId.set(n.id,{n,path});
+  (n.children||[]).forEach(c=>index(c,path.concat(n.id)));
+}
+const labels={todo:'Не изучено',studying:'В работе',known:'Изучено'};
+const symbols={todo:'○',studying:'◐',known:'✓'};
+const nextStatus={todo:'studying',studying:'known'},metrics=['known','studying','todo'];
+let opened=new Set(['knowledge-root']),positions=new Map(),visible=[],edges=[],camera={x:0,y:0,z:1},selected=null,focus='knowledge-root',size=null;
+let pointers=new Map(),drag=null,pinch=null,moved=false,lastPointer=0;
+const mobile=()=>board.clientWidth<620;
 function layout(){positions=new Map();visible=[];edges=[];function visit(n,depth,dir,counter){const kids=opened.has(n.id)?n.children||[]:[];let y;if(kids.length){const yy=kids.map(c=>visit(c,depth+1,dir,counter));y=(yy[0]+yy[yy.length-1])/2;}else{y=counter.y;counter.y+=Y;}positions.set(n.id,{x:depth*X*dir,y});visible.push(n);kids.forEach(c=>edges.push({p:n.id,c:c.id}));return y;}if(mobile()){visit(tree,0,1,{y:0});return;}const children=opened.has(tree.id)?tree.children||[]:[],sides=[[],[]],weights=[0,0];for(const n of children){const side=weights[0]<=weights[1]?0:1;sides[side].push(n);weights[side]+=aggregate(n).total||1;}for(const[list,dir]of [[sides[0],1],[sides[1],-1]]){const cursor={y:0},start=visible.length;list.forEach(n=>{visit(n,1,dir,cursor);edges.push({p:tree.id,c:n.id});});const shift=(cursor.y-Y)/2;visible.slice(start).forEach(n=>positions.get(n.id).y-=shift);}positions.set(tree.id,{x:0,y:0});visible.push(tree);}
 function transform(){world.style.transform='translate('+camera.x+'px,'+camera.y+'px) scale('+camera.z+')';}function zoomAt(x,y,k){const z=Math.max(.06,Math.min(2.5,camera.z*k)),wx=(x-camera.x)/camera.z,wy=(y-camera.y)/camera.z;camera={x:x-wx*z,y:y-wy*z,z};transform();}function frame(ids,minZoom=0){const pp=ids.map(id=>positions.get(id)).filter(Boolean);if(!pp.length)return;const x1=Math.min(...pp.map(p=>p.x)),x2=Math.max(...pp.map(p=>p.x+W)),y1=Math.min(...pp.map(p=>p.y-H/2)),y2=Math.max(...pp.map(p=>p.y+H/2)),bw=board.clientWidth,bh=board.clientHeight;camera.z=Math.max(minZoom,.06,Math.min(1.05,(bw-28)/(x2-x1),(bh-140)/(y2-y1)));camera.x=(bw-(x1+x2)*camera.z)/2;camera.y=54+((bh-140)-(y1+y2)*camera.z)/2;transform();}function updateBack(){if(!tree)return;const info=byId.get(focus)||byId.get(tree.id),p=info.path[info.path.length-1];$('back').hidden=!p;$('back').textContent=p?'← '+byId.get(p).n.title:'';$('back').dataset.parent=p||'';$('hint').hidden=!!p;}
-function render(){if(!tree)return;layout();$('nodes').replaceChildren();$('edges').replaceChildren();let ancestors=new Set(selected?byId.get(selected).path.concat(selected):[]);for(const e of edges){const p=positions.get(e.p),c=positions.get(e.c),left=c.x<p.x,a=left?p.x:p.x+W,b=left?c.x+W:c.x,m=(a+b)/2,path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('class','edge'+(ancestors.has(e.p)&&ancestors.has(e.c)?' active':''));path.setAttribute('d','M '+a+' '+p.y+' C '+m+' '+p.y+' '+m+' '+c.y+' '+b+' '+c.y);$('edges').append(path);}for(const n of visible){const p=positions.get(n.id),branch=!!n.children?.length,deferred=/^\(und\)/i.test(n.title.trimStart()),hasNote=sourceMode==='obsidian'&&!!n.path,b=document.createElement('button');b.type='button';b.title=n.title;b.className='node '+(branch?'branch':'leaf')+(n.id===tree.id?' root':'')+(selected===n.id?' selected':'')+(deferred?' deferred':'')+(hasNote?' has-note':'');b.dataset.id=n.id;b.dataset.status=n.status||'';b.dataset.deferred=String(deferred);b.style.left=p.x+'px';b.style.top=(p.y-H/2)+'px';const mark=document.createElement('span');mark.className='symbol';mark.textContent=branch?(opened.has(n.id)?'−':'+'):symbols[n.status]||'○';mark.setAttribute('aria-hidden','true');const name=document.createElement('span');name.className='label';name.textContent=n.title;b.append(mark,name);if(branch){const counts=aggregate(n);b.dataset.known=String(counts.known);b.dataset.studying=String(counts.studying);b.dataset.todo=String(counts.todo);b.dataset.total=String(counts.total);const summary=document.createElement('span');summary.className='branch-counts';summary.setAttribute('aria-hidden','true');const bar=document.createElement('span');bar.className='branch-progress';bar.setAttribute('aria-hidden','true');for(const key of ['known','studying','todo']){const metric=document.createElement('span');metric.className='metric';metric.dataset.status=key;const icon=document.createElement('span');icon.className='metric-mark';icon.textContent=symbols[key];const number=document.createElement('span');number.textContent=String(counts[key]);metric.append(icon,number);summary.append(metric);if(counts[key]){const segment=document.createElement('span');segment.className='segment';segment.dataset.status=key;segment.style.flex=String(counts[key]);bar.append(segment);}}b.append(summary,bar);b.setAttribute('aria-expanded',String(opened.has(n.id)));b.setAttribute('aria-label',n.title+'. Изучено: '+counts.known+'; в процессе: '+counts.studying+'; не изучено: '+counts.todo+'. Всего тем: '+counts.total);}else{b.setAttribute('aria-pressed',String(selected===n.id));b.setAttribute('aria-label',n.title+': '+labels[n.status]);}$('nodes').append(b);if(hasNote){const note=document.createElement('button');note.type='button';note.className='note-open'+(deferred?' deferred':'')+(selected===n.id?' selected':'');note.dataset.noteId=n.id;note.title='Открыть заметку в Obsidian';note.setAttribute('aria-label','Открыть заметку: '+n.title);note.style.left=(p.x+W-44)+'px';note.style.top=(p.y-H/2+1)+'px';const icon=document.createElement('span');icon.textContent='↗';icon.setAttribute('aria-hidden','true');note.append(icon);$('nodes').append(note);}}updateBack();transform();}
+function render(){
+  if(!tree)return;
+  const activeStatusId=document.activeElement?.dataset?.statusId;
+  layout();
+  $('nodes').replaceChildren();
+  $('edges').replaceChildren();
+  const ancestors=new Set(selected?byId.get(selected).path.concat(selected):[]);
+  for(const e of edges){
+    const p=positions.get(e.p),c=positions.get(e.c),left=c.x<p.x;
+    const a=left?p.x:p.x+W,b=left?c.x+W:c.x,m=(a+b)/2;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('class','edge'+(ancestors.has(e.p)&&ancestors.has(e.c)?' active':''));
+    path.setAttribute('d','M '+a+' '+p.y+' C '+m+' '+p.y+' '+m+' '+c.y+' '+b+' '+c.y);
+    $('edges').append(path);
+  }
+  for(const n of visible){
+    const p=positions.get(n.id),branch=!!n.children?.length;
+    const deferred=/^\(und\)/i.test(n.title.trimStart());
+    const hasNote=sourceMode==='obsidian'&&!!n.path;
+    const stateClasses=(selected===n.id?' selected':'')+(deferred?' deferred':'');
+    const dates=!branch&&eligible(n)?reviewDates(n):[];
+    const appearance=eligible(n)?reviewAppearance(n):null;
+    const b=document.createElement('button');
+    b.type='button';
+    b.title=n.title;
+    b.className='node '+(branch?'branch':'leaf')+(n.id===tree.id?' root':'')+stateClasses+(hasNote?' has-note':'')+(dates.length?' scheduled':'');
+    b.dataset.id=n.id;
+    b.dataset.status=n.status||'';
+    if(appearance)b.dataset.review=appearance;
+    b.dataset.deferred=String(deferred);
+    b.style.left=p.x+'px';
+    b.style.top=(p.y-H/2)+'px';
+    const mark=document.createElement('span');
+    mark.className='symbol';
+    mark.textContent=branch?(opened.has(n.id)?'−':'+'):symbols[n.status]||'○';
+    mark.setAttribute('aria-hidden','true');
+    const name=document.createElement('span');
+    name.className='label';
+    name.textContent=n.title;
+    b.append(mark,name);
+    if(branch){
+      const counts=aggregate(n);
+      for(const key of [...metrics,'total'])b.dataset[key]=String(counts[key]);
+      const summary=document.createElement('span');
+      summary.className='branch-counts';
+      summary.setAttribute('aria-hidden','true');
+      const bar=document.createElement('span');
+      bar.className='branch-progress';
+      bar.setAttribute('aria-hidden','true');
+      for(const key of metrics){
+        const metric=document.createElement('span');
+        metric.className='metric';
+        metric.dataset.status=key;
+        const icon=document.createElement('span');
+        icon.className='metric-mark';
+        icon.textContent=symbols[key];
+        const number=document.createElement('span');
+        number.textContent=String(counts[key]);
+        metric.append(icon,number);
+        summary.append(metric);
+        if(counts[key]){
+          const segment=document.createElement('span');
+          segment.className='segment';
+          segment.dataset.status=key;
+          segment.style.flex=String(counts[key]);
+          bar.append(segment);
+        }
+      }
+      b.append(summary,bar);
+      b.setAttribute('aria-expanded',String(opened.has(n.id)));
+      b.setAttribute('aria-label',[n.title,...metrics.map(key=>labels[key]+' '+counts[key]),'Всего тем '+counts.total].join('. '));
+    }else{
+      b.setAttribute('aria-pressed',String(selected===n.id));
+      b.setAttribute('aria-label',[n.title,labels[n.status],...dates].join('. '));
+      if(dates.length){
+        const info=document.createElement('span');
+        info.className='node-dates';
+        info.dataset.review=appearance;
+        for(const date of dates){
+          const line=document.createElement('span');
+          line.textContent=date;
+          info.append(line);
+        }
+        b.append(info);
+      }
+    }
+    $('nodes').append(b);
+    if(!hasNote)continue;
+
+    const note=document.createElement('button');
+    note.type='button';
+    note.className='note-open'+stateClasses;
+    note.dataset.noteId=n.id;
+    note.title='Открыть заметку в Obsidian';
+    note.setAttribute('aria-label','Открыть заметку: '+n.title);
+    note.style.left=(p.x+W-44)+'px';
+    note.style.top=(p.y-H/2+1)+'px';
+    const icon=document.createElement('span');
+    icon.textContent='↗';
+    icon.setAttribute('aria-hidden','true');
+    note.append(icon);
+
+    const status=document.createElement('button');
+    status.type='button';
+    status.className='status-cycle'+stateClasses;
+    status.dataset.statusId=n.id;
+    status.dataset.status=n.status;
+    if(appearance)status.dataset.review=appearance;
+    status.title=statusAction(n);
+    status.setAttribute('aria-label',n.title+'. '+statusAction(n));
+    status.textContent=symbols[n.status];
+    status.style.left=(p.x+(branch?W-44:0))+'px';
+    status.style.top=(p.y+(branch?2:-22))+'px';
+    $('nodes').append(status,note);
+    if(activeStatusId===n.id)status.focus?.({preventScroll:true});
+  }
+  updateBack();
+  transform();
+}
 function focusBranch(id){const n=byId.get(id)?.n;if(!n)return;focus=id;frame([id,...(opened.has(id)?n.children||[]:[]).map(n=>n.id)],mobile()?.78:.86);updateBack();}function activate(id){const n=byId.get(id)?.n;if(!n)return;if(n.children?.length){const old=positions.get(id),point=old?{x:camera.x+old.x*camera.z,y:camera.y+old.y*camera.z}:null,expand=!opened.has(id);expand?opened.add(id):opened.delete(id);render();if(expand)focusBranch(id);else if(point){const p=positions.get(id);camera.x=point.x-p.x*camera.z;camera.y=point.y-p.y*camera.z;transform();}$('selection').textContent=n.title;}else{selected=selected===id?null:id;render();$('selection').textContent=selected?labels[n.status]+' · '+n.title:'';}}
 function openNote(id){if(sourceMode!=='obsidian'||!byId.get(id)?.n.path)return;window.parent.postMessage({type:'knowledge-tree-open-note',id},'*');}
-function startView(){if(!tree)return;focusBranch(tree.id);}$('back').addEventListener('click',()=>focusBranch($('back').dataset.parent));$('overview').addEventListener('click',()=>{if(!tree)return;opened=new Set([tree.id]);focus=tree.id;selected=null;$('selection').textContent='';render();focusBranch(tree.id);});$('more').addEventListener('click',()=>zoomAt(board.clientWidth/2,board.clientHeight/2,1.22));$('less').addEventListener('click',()=>zoomAt(board.clientWidth/2,board.clientHeight/2,1/1.22));$('nodes').addEventListener('click',e=>{if(e.detail!==0&&Date.now()-lastPointer<=450)return;const note=e.target.closest('.note-open');if(note){openNote(note.dataset.noteId);return;}const b=e.target.closest('[data-id]');if(b)activate(b.dataset.id);});function point(e){const r=board.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}function startPinch(){const[a,b]=[...pointers.values()],m={x:(a.x+b.x)/2,y:(a.y+b.y)/2};pinch={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),z:camera.z,wx:(m.x-camera.x)/camera.z,wy:(m.y-camera.y)/camera.z};moved=true;if(drag){drag.id=null;drag.noteId=null;}}
-board.addEventListener('pointerdown',e=>{if(e.target.closest('.controls')||e.target.closest('.crumb')||e.button>0)return;const p=point(e);pointers.set(e.pointerId,p);board.setPointerCapture(e.pointerId);if(pointers.size===1){drag={p,camera:{...camera},id:e.target.closest('[data-id]')?.dataset.id,noteId:e.target.closest('.note-open')?.dataset.noteId};moved=false;}else if(pointers.size===2)startPinch();});board.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const p=point(e);pointers.set(e.pointerId,p);if(pointers.size>=2&&pinch){const[a,b]=[...pointers.values()],m={x:(a.x+b.x)/2,y:(a.y+b.y)/2},z=Math.max(.06,Math.min(2.5,pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));camera={x:m.x-pinch.wx*z,y:m.y-pinch.wy*z,z};transform();}else if(drag){const dx=p.x-drag.p.x,dy=p.y-drag.p.y;if(Math.hypot(dx,dy)>7)moved=true;if(moved){camera.x=drag.camera.x+dx;camera.y=drag.camera.y+dy;transform();}}});function end(e,cancel){if(!pointers.has(e.pointerId))return;const single=pointers.size===1,id=drag?.id,noteId=drag?.noteId;pointers.delete(e.pointerId);lastPointer=Date.now();if(!pointers.size){drag=null;pinch=null;if(single&&!moved&&!cancel){if(noteId)openNote(noteId);else if(id)activate(id);}}else if(pointers.size===1){drag={p:[...pointers.values()][0],camera:{...camera},id:null};pinch=null;moved=true;}else startPinch();}board.addEventListener('pointerup',e=>end(e,false));board.addEventListener('pointercancel',e=>end(e,true));board.addEventListener('wheel',e=>{if(e.target.closest('.controls'))return;e.preventDefault();const p=point(e);zoomAt(p.x,p.y,Math.exp(-e.deltaY*.0015));},{passive:false});new ResizeObserver(()=>{const w=board.clientWidth,h=board.clientHeight;if(!w||!h)return;if(!size){size={w,h};startView();}else if((size.w<620)!==(w<620)){size={w,h};render();startView();}else{const wx=(size.w/2-camera.x)/camera.z,wy=(size.h/2-camera.y)/camera.z;size={w,h};camera.x=w/2-wx*camera.z;camera.y=h/2-wy*camera.z;transform();}}).observe(board);
+function cycleStatus(id){
+  const note=byId.get(id)?.n;
+  if(sourceMode!=='obsidian'||!note?.path||pendingEdit)return;
+  if(eligible(note)){
+    openReview(note);
+    return;
+  }
+  window.parent.postMessage({type:'knowledge-tree-cycle-status',id},'*');
+}
+let viewMode='tree',cardEntries=[],today=localDay(),midnightTimer=null;
+const dateFormat=new Intl.DateTimeFormat('ru',{day:'numeric',month:'short',timeZone:'UTC'});
+const yearFormat=new Intl.DateTimeFormat('ru',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+function displayDate(day){
+  const format=day.slice(0,4)===today.slice(0,4)?dateFormat:yearFormat;
+  return format.format(new Date(day+'T00:00:00Z'));
+}
+function dueDate(n){return dueOn(n,today);}
+function isOverdue(n){
+  const day=dueDate(n);
+  return Boolean(day&&day<today);
+}
+function reviewAppearance(n){
+  if(n.review_exempt)return 'exempt';
+  return isOverdue(n)?'overdue':'regular';
+}
+function reviewDates(n){
+  if(!eligible(n))return [];
+  const day=dueDate(n),output=[];
+  if(dateOnly(n.reviewed_on)&&n.reviewed_on<=today)output.push('Повтор '+displayDate(n.reviewed_on));
+  if(n.review_exempt)output.push('Повтор не требуется');
+  else if(day)output.push((day<today?'Просрочено ':day===today?'Срок сегодня · ':'Срок ')+displayDate(day));
+  else output.push('Без срока · пора повторить');
+  return output;
+}
+function statusAction(n){
+  if(n.status==='known')return labels[n.status]+' · '+(n.review_exempt?'Настроить повторение':'Отметить повторение');
+  return labels[n.status]+' · '+labels[nextStatus[n.status]];
+}
+function updateShortcuts(){
+  const studying=cardEntries.filter(entry=>entry.n.status==='studying').length;
+  const overdue=cardEntries.filter(entry=>isOverdue(entry.n)).length;
+  $('list-studying').textContent='В работе · '+studying;
+  $('list-overdue').textContent='Просрочено · '+overdue;
+}
+function renderList(){
+  if(viewMode!=='cards')return;
+  const status=$('status-filter').value||'all';
+  const scope=$('repeat-filter');
+  scope.disabled=status==='todo'||status==='studying';
+  if(scope.disabled)scope.value='all';
+  const repeat=scope.value||'all';
+  const matches=[];
+  for(const {n,path} of cardEntries){
+    if(status!=='all'&&n.status!==status)continue;
+    const day=dueDate(n);
+    if(repeat==='overdue'&&(!day||day>=today))continue;
+    if(repeat==='required'&&(!eligible(n)||n.review_exempt||day>today))continue;
+    matches.push({n,path,day});
+  }
+  // The sort is stable, so equal dates preserve curriculum order.
+  if(repeat!=='all')matches.sort((a,b)=>{
+    const first=a.day||'\uffff',second=b.day||'\uffff';
+    return first<second?-1:first>second?1:0;
+  });
+  const scroll=$('list-scroll'),top=scroll.scrollTop;
+  const active=document.activeElement;
+  let restore;
+  const rows=matches.map(({n,path})=>{
+    const row=document.createElement('li');
+    row.className='card-row'+(reviewDraft?.id===n.id?' selected':'');
+    row.dataset.cardId=n.id;
+    if(eligible(n))row.dataset.review=reviewAppearance(n);
+    const canEdit=sourceMode==='obsidian'&&!!n.path;
+    const mark=document.createElement(canEdit?'button':'span');
+    mark.className=canEdit?'list-status':'list-symbol';
+    mark.dataset.status=n.status;
+    mark.textContent=symbols[n.status];
+    if(canEdit){
+      mark.type='button';
+      mark.dataset.statusId=n.id;
+      mark.title=statusAction(n);
+      mark.setAttribute('aria-label',n.title+'. '+mark.title);
+      mark.addEventListener('click',()=>cycleStatus(n.id));
+      if(active?.className==='list-status'&&active.dataset.statusId===n.id)restore=mark;
+    }else mark.setAttribute('aria-hidden','true');
+    const detail=document.createElement('div'),title=document.createElement(canEdit?'button':'span');
+    title.className=canEdit?'list-title':'card-label';
+    title.textContent=n.title;
+    if(canEdit){
+      title.type='button';
+      title.dataset.noteId=n.id;
+      title.addEventListener('click',()=>openNote(n.id));
+      if(active?.className==='list-title'&&active.dataset.noteId===n.id)restore=title;
+    }
+    const parents=document.createElement('span');
+    parents.className='list-path';
+    parents.textContent=path.filter(id=>id!==tree.id).map(id=>byId.get(id).n.title).join(' › ');
+    const progress=document.createElement('span');
+    progress.className='list-progress';
+    progress.textContent=[labels[n.status],...reviewDates(n)].join(' · ');
+    detail.append(title,parents,progress);
+    row.append(mark,detail);
+    if(canEdit){
+      const arrow=document.createElement('button');
+      arrow.type='button';
+      arrow.className='list-open';
+      arrow.dataset.noteId=n.id;
+      arrow.textContent='↗';
+      arrow.setAttribute('aria-label','Открыть заметку: '+n.title);
+      arrow.addEventListener('click',()=>openNote(n.id));
+      if(active?.className==='list-open'&&active.dataset.noteId===n.id)restore=arrow;
+      row.append(arrow);
+    }
+    return row;
+  });
+  $('card-rows').replaceChildren(...rows);
+  if(typeof top==='number')scroll.scrollTop=top;
+  if(restore)restore.focus?.({preventScroll:true});
+  else if(active?.className?.startsWith('list-')&&(active.dataset.noteId||active.dataset.statusId)){
+    $('status-filter').focus?.({preventScroll:true});
+  }
+  $('list-empty').hidden=rows.length!==0;
+  $('list-size').textContent='Карточек '+rows.length;
+}
+function switchView(mode){
+  if(!tree)return;
+  viewMode=mode;
+  board.hidden=mode!=='tree';
+  $('card-list').hidden=mode!=='cards';
+  $('view-tree').setAttribute('aria-pressed',String(mode==='tree'));
+  $('view-cards').setAttribute('aria-pressed',String(mode==='cards'));
+  if(mode==='tree')render();
+  else renderList();
+}
+function openFiltered(status,repeat){
+  $('status-filter').value=status;
+  $('repeat-filter').value=repeat;
+  $('list-scroll').scrollTop=0;
+  switchView('cards');
+}
+$('view-tree').addEventListener('click',()=>switchView('tree'));
+$('view-cards').addEventListener('click',()=>switchView('cards'));
+$('list-studying').addEventListener('click',()=>openFiltered('studying','all'));
+$('list-overdue').addEventListener('click',()=>openFiltered('all','overdue'));
+for(const id of ['status-filter','repeat-filter']){
+  $(id).addEventListener('change',()=>{
+    $('list-scroll').scrollTop=0;
+    renderList();
+  });
+}
+
+const defaultRules={first:7,cap:365,againMin:3,hardMin:7,hardMul:1.2,goodMin:14,goodMul:2,easyMin:21,easyMul:3};
+const ruleFields=Object.keys(defaultRules);
+const gradeKeys=['again','hard','good','easy'];
+let reviewRules=defaultRules,reviewDraft=null,pendingEdit=null,requestCounter=0;
+let returnFocus=null;
+function showPane(pane){
+  $('review-pane').hidden=!pane;
+  $('review-panel').hidden=pane!=='review';
+  $('review-settings').hidden=pane!=='settings';
+}
+function closePane(){
+  if(pendingEdit)return;
+  const noteId=reviewDraft?.id;
+  showPane('');
+  reviewDraft=null;
+  renderList();
+  let control;
+  if(noteId){
+    if(viewMode==='cards'){
+      const row=Array.from($('card-rows').children).find(item=>item.dataset.cardId===noteId);
+      control=row?.children[0]||$('status-filter');
+    }else{
+      control=Array.from($('nodes').children).find(item=>item.dataset.statusId===noteId)||$('view-tree');
+    }
+  }else if(returnFocus?.isConnected)control=returnFocus;
+  control?.focus?.({preventScroll:true});
+  returnFocus=null;
+}
+function openReview(note){
+  $('operation-status').textContent='';
+  reviewDraft={id:note.id,expected:{status:note.status,...currentSchedule(note)},grade:'',action:'record'};
+  $('review-title').textContent=note.title;
+  $('review-date').max=today;
+  $('review-date').value=today;
+  $('review-error').textContent='';
+  $('reset-confirm').hidden=true;
+  $('review-grades').hidden=false;
+  $('review-save').textContent='Записать повторение';
+  showPane('review');
+  updateReview();
+  renderList();
+  $(note.review_exempt?'review-exempt':'review-date').focus?.({preventScroll:true});
+}
+function currentSchedule(note){
+  const schedule=readSchedule(note);
+  for(const key of ['learned_on','reviewed_on'])if(schedule[key]>today)delete schedule[key];
+  return schedule;
+}
+function calculateInterval(note,grade){
+  if(grade==='again')return reviewRules.againMin;
+  const previous=note.review_interval_days||reviewRules.first;
+  const tenths=Math.round(reviewRules[grade+'Mul']*10);
+  return Math.min(reviewRules.cap,Math.max(reviewRules[grade+'Min'],Math.ceil(previous*tenths/10)));
+}
+function previewReview(note){
+  const day=dateOnly($('review-date').value);
+  if(!day||day>today)return {error:'Укажите фактическую дату, не позже сегодняшнего дня.'};
+  if(reviewDraft.action==='correct')return {day,interval:note.review_interval_days};
+  if(note.reviewed_on&&note.reviewed_on<=today&&day<note.reviewed_on){
+    return {error:'Для более ранней даты используйте «Исправить дату».'};
+  }
+  if(!reviewDraft.grade)return {error:'Выберите, как прошёл повтор.'};
+  return {day,interval:calculateInterval(note,reviewDraft.grade)};
+}
+function updateReview(){
+  if(!reviewDraft)return;
+  const n=byId.get(reviewDraft.id)?.n;
+  const correcting=reviewDraft.action==='correct';
+  const exempt=Boolean(n?.review_exempt);
+  if(n&&reviewDraft.awaitingExemption===exempt)delete reviewDraft.awaitingExemption;
+  const waiting=reviewDraft.awaitingExemption!==undefined;
+  const liveSchedule=n?{status:n.status,...currentSchedule(n)}:null;
+  const stale=!n||JSON.stringify(liveSchedule)!==JSON.stringify(reviewDraft.expected);
+  const preview=waiting?{error:'Обновляю карточку…'}
+    :stale?{error:'Карточка изменилась. Откройте её снова.'}
+    :exempt?{error:''}:previewReview(n);
+  const disabled=Boolean(pendingEdit)||waiting||stale;
+  $('review-history').textContent=n?[labels[n.status],...reviewDates(n)].join(' · '):'';
+  $('review-exempt').setAttribute('aria-pressed',String(exempt));
+  $('review-exempt').disabled=disabled;
+  $('review-date-field').hidden=exempt;
+  $('review-grades').hidden=exempt||correcting;
+  $('review-date').disabled=disabled||exempt;
+  $('review-date').max=today;
+  $('review-correct').hidden=exempt||correcting||!n?.review_interval_days||!n?.reviewed_on||n.reviewed_on>today;
+  $('review-correct').disabled=disabled||exempt;
+  $('review-reset').disabled=disabled;
+  $('reset-approve').disabled=disabled;
+  $('review-close').disabled=Boolean(pendingEdit);
+  $('review-save').hidden=exempt;
+  $('review-save').disabled=disabled||exempt||!preview.interval;
+  $('review-preview').hidden=exempt&&!waiting&&!stale;
+  $('review-preview').textContent=preview.interval
+    ? 'Следующий повтор — '+displayDate(addDays(preview.day,preview.interval))+' · '+preview.interval+' дн.'
+    : preview.error;
+  for(const key of gradeKeys){
+    $('grade-'+key).disabled=disabled||exempt;
+    $('grade-'+key).setAttribute('aria-pressed',String(key===reviewDraft.grade&&!correcting));
+  }
+}
+function postEdit(type,data){
+  const requestId=++requestCounter;
+  pendingEdit={requestId,action:data.action||'rules',exempt:data.exempt};
+  window.parent.postMessage({type,requestId,...data},'*');
+  updateReview();
+  $('rules-save').disabled=true;
+  $('rules-close').disabled=true;
+  for(const key of ruleFields)$('rule-'+key).disabled=true;
+}
+function submitReview(action){
+  if(sourceMode!=='obsidian'||pendingEdit||!reviewDraft)return;
+  const {id,grade,expected}=reviewDraft, n=byId.get(id)?.n;
+  if(!n||!eligible(n)||(action!=='reset'&&n.review_exempt))return;
+  const payload={id,action,expected};
+  if(action!=='reset'){
+    const {day,interval}=previewReview(n);
+    if(!interval)return;
+    payload.day=day;
+    if(action==='record'){
+      payload.grade=grade;
+      payload.previewInterval=interval;
+    }
+  }
+  $('review-error').textContent='';
+  postEdit('knowledge-tree-review',payload);
+}
+function handleEditResult(data){
+  if(!pendingEdit||data.requestId!==pendingEdit.requestId)return;
+  const {action,exempt}=pendingEdit;
+  pendingEdit=null;
+  $('rules-save').disabled=false;
+  $('rules-close').disabled=false;
+  for(const key of ruleFields)$('rule-'+key).disabled=false;
+  if(!data.ok){
+    $(action==='rules'?'settings-error':'review-error').textContent=data.message||'Не удалось сохранить изменения.';
+    updateReview();
+    return;
+  }
+  if(action==='set-exempt'&&reviewDraft){
+    if(exempt)reviewDraft.expected.review_exempt=true;
+    else delete reviewDraft.expected.review_exempt;
+    reviewDraft.awaitingExemption=exempt;
+    reviewDraft.action='record';
+    reviewDraft.grade='';
+    $('review-date').value=today;
+    $('review-save').textContent='Записать повторение';
+    $('reset-confirm').hidden=true;
+    $('operation-status').textContent=exempt?'Повторение больше не требуется.':'Повторение снова включено.';
+    updateReview();
+    return;
+  }
+  closePane();
+  $('operation-status').textContent=action==='rules'?'Настройки сроков сохранены.'
+    :action==='reset'?'Прогресс сброшен.'
+    :action==='correct'?'Дата повторения исправлена.':'Повторение записано.';
+}
+for(const key of gradeKeys){
+  $('grade-'+key).addEventListener('click',()=>{
+    if(!reviewDraft||pendingEdit)return;
+    reviewDraft.grade=key;
+    updateReview();
+  });
+}
+$('review-date').addEventListener('input',updateReview);
+$('review-close').addEventListener('click',closePane);
+$('review-exempt').addEventListener('click',()=>{
+  if(!reviewDraft||pendingEdit||$('review-exempt').disabled)return;
+  const {id,expected}=reviewDraft, note=byId.get(id)?.n;
+  if(!note||!eligible(note))return;
+  $('review-error').textContent='';
+  postEdit('knowledge-tree-review',{id,expected,action:'set-exempt',exempt:!note.review_exempt});
+});
+function bindSave(formId,buttonId,action){
+  const form=$(formId),button=$(buttonId);
+  const save=()=>{
+    if(!button.disabled&&form.reportValidity?.()!==false)action();
+  };
+  // The sandboxed viewer handles saves through its bridge without native form submission.
+  button.addEventListener('click',save);
+  form.addEventListener('submit',event=>event.preventDefault());
+  form.addEventListener('keydown',event=>{
+    if(event.key!=='Enter'||event.target?.tagName!=='INPUT')return;
+    event.preventDefault();
+    save();
+  });
+}
+bindSave('review-form','review-save',()=>{
+  if(reviewDraft)submitReview(reviewDraft.action);
+});
+$('review-correct').addEventListener('click',()=>{
+  if(!reviewDraft||pendingEdit)return;
+  const n=byId.get(reviewDraft.id)?.n;
+  if(!n?.reviewed_on||!n.review_interval_days)return;
+  reviewDraft.action='correct';
+  $('review-date').value=n.reviewed_on;
+  $('review-grades').hidden=true;
+  $('review-save').textContent='Сохранить дату';
+  $('review-error').textContent='';
+  updateReview();
+});
+$('review-reset').addEventListener('click',()=>{
+  $('reset-confirm').hidden=false;
+  $('reset-approve').focus?.();
+});
+$('reset-cancel').addEventListener('click',()=>{
+  $('reset-confirm').hidden=true;
+  $('review-reset').focus?.();
+});
+$('reset-approve').addEventListener('click',()=>submitReview('reset'));
+$('open-review-settings').addEventListener('click',()=>{
+  if(sourceMode!=='obsidian'||pendingEdit)return;
+  $('operation-status').textContent='';
+  returnFocus=document.activeElement;
+  reviewDraft=null;
+  for(const key of ruleFields)$('rule-'+key).value=String(reviewRules[key]);
+  $('settings-error').textContent='';
+  showPane('settings');
+  renderList();
+  $('rule-first').focus?.({preventScroll:true});
+});
+$('rules-close').addEventListener('click',closePane);
+bindSave('review-rules-form','rules-save',()=>{
+  if(pendingEdit||sourceMode!=='obsidian')return;
+  const rules={};
+  for(const key of ruleFields)rules[key]=Number($('rule-'+key).value);
+  if(ruleFields.some(key=>!key.endsWith('Mul')&&rules[key]>rules.cap)){
+    $('settings-error').textContent='Максимум должен быть не меньше остальных сроков и минимумов.';
+    return;
+  }
+  $('settings-error').textContent='';
+  postEdit('knowledge-tree-review-rules',{rules});
+});
+
+function refreshCalendar(){
+  const day=localDay();
+  if(day===today)return;
+  today=day;
+  updateShortcuts();
+  if(viewMode==='cards')renderList();
+  else render();
+  updateReview();
+  if(sourceMode==='obsidian')refresh();
+}
+function scheduleMidnight(){
+  clearTimeout(midnightTimer);
+  const midnight=new Date();
+  midnight.setHours(24,0,0,100);
+  midnightTimer=setTimeout(()=>{
+    refreshCalendar();
+    scheduleMidnight();
+  },Math.max(100,midnight.getTime()-Date.now()));
+}
+function cardAction(target){
+  const status=target.closest('.status-cycle');
+  if(status)return {run:cycleStatus,id:status.dataset.statusId};
+  const note=target.closest('.note-open');
+  if(note)return {run:openNote,id:note.dataset.noteId};
+  const card=target.closest('[data-id]');
+  if(card)return {run:activate,id:card.dataset.id};
+  return null;
+}
+function startView(){if(!tree)return;focusBranch(tree.id);}$('back').addEventListener('click',()=>focusBranch($('back').dataset.parent));$('overview').addEventListener('click',()=>{if(!tree)return;opened=new Set([tree.id]);focus=tree.id;selected=null;$('selection').textContent='';render();focusBranch(tree.id);});$('more').addEventListener('click',()=>zoomAt(board.clientWidth/2,board.clientHeight/2,1.22));$('less').addEventListener('click',()=>zoomAt(board.clientWidth/2,board.clientHeight/2,1/1.22));$('nodes').addEventListener('click',e=>{if(e.detail!==0&&Date.now()-lastPointer<=450)return;const action=cardAction(e.target);if(action)action.run(action.id);});function point(e){const r=board.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}function startPinch(){const[a,b]=[...pointers.values()],m={x:(a.x+b.x)/2,y:(a.y+b.y)/2};pinch={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),z:camera.z,wx:(m.x-camera.x)/camera.z,wy:(m.y-camera.y)/camera.z};moved=true;if(drag)drag.action=null;}
+board.addEventListener('pointerdown',e=>{if(e.target.closest('.controls')||e.target.closest('.crumb')||e.button>0)return;const p=point(e);pointers.set(e.pointerId,p);board.setPointerCapture(e.pointerId);if(pointers.size===1){drag={p,camera:{...camera},action:cardAction(e.target)};moved=false;}else if(pointers.size===2)startPinch();});board.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const p=point(e);pointers.set(e.pointerId,p);if(pointers.size>=2&&pinch){const[a,b]=[...pointers.values()],m={x:(a.x+b.x)/2,y:(a.y+b.y)/2},z=Math.max(.06,Math.min(2.5,pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));camera={x:m.x-pinch.wx*z,y:m.y-pinch.wy*z,z};transform();}else if(drag){const dx=p.x-drag.p.x,dy=p.y-drag.p.y;if(Math.hypot(dx,dy)>7)moved=true;if(moved){camera.x=drag.camera.x+dx;camera.y=drag.camera.y+dy;transform();}}});function end(e,cancel){if(!pointers.has(e.pointerId))return;const single=pointers.size===1,action=drag?.action;pointers.delete(e.pointerId);lastPointer=Date.now();if(!pointers.size){drag=null;pinch=null;if(single&&!moved&&!cancel&&action)action.run(action.id);}else if(pointers.size===1){drag={p:[...pointers.values()][0],camera:{...camera},action:null};pinch=null;moved=true;}else startPinch();}board.addEventListener('pointerup',e=>end(e,false));board.addEventListener('pointercancel',e=>end(e,true));board.addEventListener('wheel',e=>{if(e.target.closest('.controls'))return;e.preventDefault();const p=point(e);zoomAt(p.x,p.y,Math.exp(-e.deltaY*.0015));},{passive:false});new ResizeObserver(()=>{const w=board.clientWidth,h=board.clientHeight;if(!w||!h)return;if(!size){size={w,h};startView();}else if((size.w<620)!==(w<620)){size={w,h};render();if(tree)focusBranch(positions.has(focus)?focus:tree.id);}else{const wx=(size.w/2-camera.x)/camera.z,wy=(size.h/2-camera.y)/camera.z;size={w,h};camera.x=w/2-wx*camera.z;camera.y=h/2-wy*camera.z;transform();}}).observe(board);
 let sourceMode='none',directoryHandle=null,loading=false,apiRevision='',sourceLabel='',apiFailures=0,lastFilePicker='folder-input';
 const inObsidian=window.parent!==window&&location.protocol==='about:';
 function sourceStatus(text,error=false){$('source').textContent=text;$('source').classList.toggle('error',error);}
@@ -106,9 +885,22 @@ function clearError(){$('error').hidden=true;$('error-text').textContent='';}
 function applyTree(next,label){
   const first=!tree;tree=next;byId.clear();index(tree);for(const id of opened)if(!byId.has(id))opened.delete(id);opened.add(tree.id);
   if(!byId.has(focus))focus=tree.id;if(selected&&!byId.has(selected))selected=null;
-  sourceLabel=label;const total=KnowledgeTreeData.aggregate(tree);$('count').textContent=total.known+' / '+total.total+' изучено';$('empty').hidden=true;
-  clearError();sourceStatus(label+' · '+(byId.size-1)+' заметок');render();if(first)startView();
+  sourceLabel=label;
+  today=localDay();
+  cardEntries=[...byId.values()].filter(({n})=>n.id!==tree.id&&!n.children?.length);
+  const {total,todo,studying,known}=aggregate(tree);
+  $('count').textContent=`Всего карточек ${total} · Не изучено ${todo} · В работе ${studying} · Изучено ${known}`;
+  $('empty').hidden=true;
+  for(const id of ['view-cards','list-studying','list-overdue'])$(id).disabled=false;
+  $('open-review-settings').disabled=false;
+  clearError();
+  sourceStatus(label+' · '+(byId.size-1)+' заметок');
+  updateShortcuts();
+  if(viewMode==='cards')renderList();
+  else render();
+  if(first)startView();
   $('selection').textContent=selected?labels[byId.get(selected).n.status]+' · '+byId.get(selected).n.title:'';
+  updateReview();
 }
 async function recordsFromFiles(files){
   const records=[],errors=[];for(let i=0;i<files.length;i+=24){await Promise.all(files.slice(i,i+24).map(async({file,path})=>{try{const header=await file.slice(0,65536).text();records.push(KnowledgeTreeData.parseHeader(header,path));}catch(e){errors.push(e.message);}}));}
@@ -149,12 +941,31 @@ $('folder').addEventListener('click',chooseFolder);$('choose').addEventListener(
 $('choose-files').addEventListener('click',()=>$('files-input').click());$('folder-input').addEventListener('change',e=>pickedFiles(e,true));$('files-input').addEventListener('change',e=>pickedFiles(e,false));
 if(inObsidian){
   sourceMode='obsidian';sourceStatus('Подключаю Obsidian…');$('folder').hidden=true;$('choose').hidden=true;$('choose-files').hidden=true;$('welcome-text').textContent='Читаю свойства заметок из Obsidian…';
-  window.addEventListener('message',event=>{if(event.source!==window.parent)return;const data=event.data;if(data?.type==='knowledge-tree-data'){try{applyTree(KnowledgeTreeData.buildTree(data.payload.notes),'Obsidian · автообновление');}catch(e){showError(e);}}else if(data?.type==='knowledge-tree-error')showError(new Error(data.message));});
+  $('open-review-settings').hidden=false;
+  $('open-review-settings').disabled=true;
+  window.addEventListener('message',event=>{
+    if(event.source!==window.parent)return;
+    const data=event.data;
+    if(data?.type==='knowledge-tree-data'){
+      try{
+        const next=KnowledgeTreeData.buildTree(data.payload.notes);
+        reviewRules=data.payload.reviewRules||defaultRules;
+        applyTree(next,'Obsidian · автообновление');
+      }catch(e){showError(e);}
+    }else if(data?.type==='knowledge-tree-review-result')handleEditResult(data);
+    else if(data?.type==='knowledge-tree-error')showError(new Error(data.message));
+  });
   window.parent.postMessage({type:'knowledge-tree-ready'},'*');
 }else if(/^https?:$/.test(location.protocol)){
   sourceMode='api';loadAPI();setInterval(()=>{if(sourceMode==='api'&&!document.hidden)loadAPI();},4000);
 }
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&sourceMode==='api')loadAPI();});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)return;
+  refreshCalendar();
+  scheduleMidnight();
+  if(sourceMode==='api')loadAPI();
+});
+scheduleMidnight();
 
 })();
 

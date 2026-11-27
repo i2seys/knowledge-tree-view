@@ -7,8 +7,18 @@ const TREE_DIRECTORY = 'KnowledgeTree';
 const HTML_PATH = TREE_DIRECTORY + '/index.html';
 const TOPICS_DIRECTORY = TREE_DIRECTORY + '/topics';
 const TOPICS_PREFIX = TOPICS_DIRECTORY + '/';
+const ROOT_ID = 'knowledge-root';
+const NEXT_STATUS = new Map([['todo', 'studying'], ['studying', 'known']]);
 const STATUSES = new Set(['todo', 'studying', 'known']);
 const METADATA_FIELDS = ['id', 'parent', 'title', 'status', 'order'];
+const REVIEW_FIELDS = ['learned_on', 'reviewed_on', 'review_interval_days', 'review_exempt'];
+const DEFAULT_REVIEW_RULES = Object.freeze({
+  first: 7, cap: 365, againMin: 3,
+  hardMin: 7, hardMul: 1.2, goodMin: 14, goodMul: 2, easyMin: 21, easyMul: 3
+});
+const REVIEW_GRADES = new Set(['again', 'hard', 'good', 'easy']);
+const REVIEW_DAY_FIELDS = ['first', 'cap', 'againMin', 'hardMin', 'goodMin', 'easyMin'];
+const REVIEW_MULTIPLIER_FIELDS = ['hardMul', 'goodMul', 'easyMul'];
 const DECIMAL_NUMBER = /^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/;
 // Development reads the local viewer. The release builder replaces this value.
 const BUNDLED_HTML = null; // @bundle-html
@@ -31,8 +41,105 @@ function textProperty(value, field, path, fallback) {
   return value.trim() || fallback;
 }
 
+function validTopicId(id) {
+  return typeof id === 'string' && id.length > 0 && id.length <= 256 && !/\s/.test(id);
+}
+
+class TopicError extends Error {}
+class NoStatusChange extends Error {}
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function localDay() {
+  const date = new Date();
+  const pad = number => String(number).padStart(2, '0');
+  return String(date.getFullYear()).padStart(4, '0') + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+}
+
+function calendarDay(value) {
+  if (typeof value !== 'string') return undefined;
+  const day = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day.startsWith('0000')) return undefined;
+  const date = new Date(day + 'T00:00:00Z');
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === day ? day : undefined;
+}
+
+function validInterval(value) {
+  return Number.isInteger(value) && value >= 1 && value <= 3650;
+}
+
+function reviewMetadata(frontmatter, today) {
+  const result = {};
+  for (const key of ['learned_on', 'reviewed_on']) {
+    const day = calendarDay(frontmatter[key]);
+    if (day && day <= today) result[key] = day;
+  }
+  const raw = frontmatter.review_interval_days;
+  const days = typeof raw === 'string' && /^\d{1,4}$/.test(raw.trim()) ? Number(raw.trim()) : raw;
+  if (validInterval(days)) result.review_interval_days = days;
+  const exempt = frontmatter.review_exempt;
+  if (exempt === true || typeof exempt === 'string' && exempt.trim().toLowerCase() === 'true') result.review_exempt = true;
+  return result;
+}
+
+function normalizeRules(input) {
+  const rules = {};
+  if (!isRecord(input)) throw new TopicError('Проверьте настройки сроков.');
+  for (const key of REVIEW_DAY_FIELDS) {
+    if (!validInterval(input[key])) throw new TopicError('Сроки должны быть целыми числами от 1 до 3650 дней.');
+    rules[key] = input[key];
+  }
+  for (const key of REVIEW_MULTIPLIER_FIELDS) {
+    const value = input[key];
+    if (typeof value !== 'number' || value < 1 || value > 10 || value !== Math.round(value * 10) / 10) {
+      throw new TopicError('Множитель должен быть от 1 до 10 с шагом 0,1.');
+    }
+    rules[key] = value;
+  }
+  if (REVIEW_DAY_FIELDS.some(key => rules[key] > rules.cap)) {
+    throw new TopicError('Максимальный срок должен быть не меньше остальных сроков и минимумов.');
+  }
+  return rules;
+}
+
+function currentStatus(frontmatter) {
+  const value = frontmatter.status;
+  const status = normalizeStatus(value == null ? 'todo' : typeof value === 'string' ? value.trim() || 'todo' : null);
+  if (!STATUSES.has(status)) throw new TopicError('Допустимые статусы — todo, studying, known.');
+  return status;
+}
+
+function normalizeStatus(status) {
+  return status === 'repeated' ? 'known' : status;
+}
+
+function requestedInterval(rules, grade, previous) {
+  if (!REVIEW_GRADES.has(grade)) throw new TopicError('Выберите, как прошёл повтор.');
+  if (grade === 'again') return rules.againMin;
+  const tenths = Math.round(rules[grade + 'Mul'] * 10);
+  return Math.min(rules.cap, Math.max(rules[grade + 'Min'], Math.ceil(previous * tenths / 10)));
+}
+
+function validRequestId(value) {
+  return Number.isSafeInteger(value) && value >= 0
+    || typeof value === 'string' && value.length > 0 && value.length <= 128;
+}
+
+function findTopic(app, id) {
+  const matches = topicFiles(app).filter(file => {
+    const value = app.metadataCache.getFileCache(file)?.frontmatter?.id;
+    return typeof value === 'string' && value.trim() === id;
+  });
+  if (!matches.length) throw new TopicError('Заметка темы не найдена. Дождитесь синхронизации и обновите дерево.');
+  if (matches.length !== 1) throw new TopicError('У нескольких заметок одинаковый id. Исправьте свойства тем и обновите дерево.');
+  return matches[0];
+}
+
 function collectNotes(app) {
   const files = topicFiles(app).sort((a, b) => a.path.localeCompare(b.path));
+  const today = localDay();
 
   return files.map(file => {
     const path = file.path.slice(TREE_DIRECTORY.length + 1);
@@ -46,15 +153,15 @@ function collectNotes(app) {
         throw new Error(path + ': свойство ' + field + ' должно быть простым значением, без списков и объектов.');
       }
     }
-    // Copy only the five named scalar fields. In particular, never send the
-    // frontmatter object itself, its positions, other properties, or note text.
+    // Send only named, normalized fields. Note content and arbitrary properties
+    // must not cross the sandbox bridge.
     const get = field => Object.prototype.hasOwnProperty.call(frontmatter, field) ? frontmatter[field] : undefined;
     const id = textProperty(get('id'), 'id', path, '');
-    if (!id || /\s/.test(id) || id.length > 256) throw new Error(path + ': добавьте id без пробелов, длиной до 256 символов.');
+    if (!validTopicId(id)) throw new Error(path + ': добавьте id без пробелов, длиной до 256 символов.');
     const parent = textProperty(get('parent'), 'parent', path, '');
     const basename = typeof file.basename === 'string' ? file.basename : file.path.split('/').pop().replace(/\.md$/i, '');
     const title = textProperty(get('title'), 'title', path, basename);
-    const status = textProperty(get('status'), 'status', path, 'todo');
+    const status = normalizeStatus(textProperty(get('status'), 'status', path, 'todo'));
     if (!STATUSES.has(status)) throw new Error(path + ': допустимые статусы — todo, studying, known.');
     const rawOrder = get('order');
     if (typeof rawOrder === 'boolean') throw new Error(path + ': order должен быть конечным числом.');
@@ -64,7 +171,7 @@ function collectNotes(app) {
     }
     const order = normalizedOrder === undefined || normalizedOrder === null || normalizedOrder === '' ? 0 : Number(normalizedOrder);
     if (!Number.isFinite(order)) throw new Error(path + ': order должен быть конечным числом.');
-    return { path, id, parent, title, status, order };
+    return { path, id, parent, title, status, order, ...reviewMetadata(frontmatter, today) };
   });
 }
 
@@ -108,6 +215,14 @@ class KnowledgeTreeView extends ItemView {
       if (!event.data || typeof event.data !== 'object') return;
       if (event.data.type === 'knowledge-tree-open-note') {
         void this.openNote(event.data.id);
+        return;
+      }
+      if (event.data.type === 'knowledge-tree-cycle-status') {
+        void this.cycleStatus(event.data.id);
+        return;
+      }
+      if (event.data.type === 'knowledge-tree-review' || event.data.type === 'knowledge-tree-review-rules') {
+        void this.applyReviewRequest(event.data);
         return;
       }
       if (event.data.type !== 'knowledge-tree-ready' && event.data.type !== 'knowledge-tree-refresh') return;
@@ -155,34 +270,56 @@ class KnowledgeTreeView extends ItemView {
   }
 
   async openNote(id) {
-    if (this.closed || this.openingNote || typeof id !== 'string' || !id || id.length > 256 || /\s/.test(id)) return;
+    if (this.closed || this.openingNote || !validTopicId(id)) return;
     this.openingNote = true;
     const generation = this.openGeneration;
     try {
-      // Resolve a stable topic ID against current vault metadata, including
-      // renames since the last render. The iframe cannot supply a file path.
-      const matches = topicFiles(this.app).filter(file => {
-        const value = this.app.metadataCache.getFileCache(file)?.frontmatter?.id;
-        return typeof value === 'string' && value.trim() === id;
-      });
-      if (!matches.length) {
-        new Notice('Заметка темы не найдена. Дождитесь синхронизации и обновите дерево.');
-        return;
-      }
-      if (matches.length !== 1) {
-        new Notice('У нескольких заметок одинаковый id. Исправьте свойства тем и обновите дерево.');
-        return;
-      }
+      // Resolve the topic again so renames since the last render are supported.
+      const file = findTopic(this.app, id);
       const leaf = this.app.workspace.getLeaf('tab');
-      await leaf.openFile(matches[0], { active: true });
+      await leaf.openFile(file, { active: true });
       if (!this.closed && generation === this.openGeneration) await this.app.workspace.revealLeaf(leaf);
-    } catch (_error) {
+    } catch (error) {
       if (!this.closed && generation === this.openGeneration) {
-        new Notice('Не удалось открыть заметку темы. Попробуйте ещё раз.');
+        new Notice(error instanceof TopicError ? error.message : 'Не удалось открыть заметку темы. Попробуйте ещё раз.');
       }
     } finally {
       if (generation === this.openGeneration) this.openingNote = false;
     }
+  }
+
+  async cycleStatus(id) {
+    if (this.closed || !this.frameReady || !validTopicId(id) || id === ROOT_ID) return;
+    const generation = this.openGeneration;
+    try {
+      await this.plugin.advanceTopicStatus(id);
+      if (!this.closed && generation === this.openGeneration) this.queueRefresh(false);
+    } catch (error) {
+      if (!this.closed && generation === this.openGeneration) {
+        const detail = error instanceof TopicError ? error.message : 'Попробуйте ещё раз.';
+        new Notice('Не удалось изменить статус. ' + detail);
+      }
+    }
+  }
+
+  async applyReviewRequest(request) {
+    if (!this.frameReady || !validRequestId(request.requestId)) return;
+    const generation = this.openGeneration;
+    const frame = this.frame;
+    const result = { type: 'knowledge-tree-review-result', requestId: request.requestId, ok: true };
+    try {
+      if (request.type === 'knowledge-tree-review-rules') {
+        await this.plugin.updateReviewRules(request.rules);
+      } else {
+        await this.plugin.updateReview(request);
+      }
+    } catch (error) {
+      result.ok = false;
+      result.message = error instanceof TopicError ? error.message : 'Не удалось сохранить изменения. Попробуйте ещё раз.';
+    }
+    if (this.closed || generation !== this.openGeneration || frame !== this.frame) return;
+    frame.contentWindow.postMessage(result, '*');
+    this.queueRefresh(false);
   }
 
   queueRefresh(force) {
@@ -200,7 +337,7 @@ class KnowledgeTreeView extends ItemView {
   sendNotes(force = false) {
     if (this.closed || !this.frameReady || !this.frame?.contentWindow) return;
     try {
-      const payload = { source: 'obsidian', notes: collectNotes(this.app) };
+      const payload = { source: 'obsidian', notes: collectNotes(this.app), reviewRules: this.plugin.reviewRules };
       const signature = JSON.stringify(payload);
       if (force || signature !== this.lastPayload || this.lastError !== null) {
         // A sandbox without allow-same-origin has an opaque origin. The exact
@@ -243,7 +380,17 @@ class KnowledgeTreeView extends ItemView {
 }
 
 module.exports = class KnowledgeTreePlugin extends Plugin {
+  statusWrites = new Map();
+  rulesWrite = Promise.resolve();
+  reviewRules = DEFAULT_REVIEW_RULES;
+
   async onload() {
+    try {
+      const data = await this.loadData();
+      if (data?.reviewRules !== undefined) this.reviewRules = normalizeRules(data.reviewRules);
+    } catch {
+      this.reviewRules = DEFAULT_REVIEW_RULES;
+    }
     this.registerView(VIEW_TYPE, leaf => new KnowledgeTreeView(leaf, this));
     const open = () => { void this.openTree(); };
     this.addRibbonIcon('git-fork', 'Открыть дерево знаний', open);
@@ -261,6 +408,108 @@ module.exports = class KnowledgeTreePlugin extends Plugin {
     } catch (_error) {
       new Notice('Не удалось открыть дерево знаний. Попробуйте включить плагин заново.');
     }
+  }
+
+  async writeTopic(id, edit) {
+    if (!validTopicId(id) || id === ROOT_ID) throw new TopicError('Не найдена карточка для записи.');
+    // Serialize operations for this note, including changes from another view.
+    const previous = this.statusWrites.get(id) ?? Promise.resolve();
+    const write = previous.catch(() => {}).then(async () => {
+      const file = findTopic(this.app, id);
+      await this.app.fileManager.processFrontMatter(file, frontmatter => {
+        if (typeof frontmatter.id !== 'string' || frontmatter.id.trim() !== id) {
+          throw new TopicError('Заметка изменилась. Обновите дерево.');
+        }
+        edit(frontmatter, currentStatus(frontmatter));
+      });
+    });
+    this.statusWrites.set(id, write);
+    try {
+      await write;
+    } finally {
+      if (this.statusWrites.get(id) === write) this.statusWrites.delete(id);
+    }
+  }
+
+  async advanceTopicStatus(id) {
+    try {
+      await this.writeTopic(id, (frontmatter, status) => {
+        const next = NEXT_STATUS.get(status);
+        // Abort the frontmatter transaction as well as the status change.
+        if (!next) throw new NoStatusChange();
+        frontmatter.status = next;
+        if (next === 'known') {
+          frontmatter.learned_on = localDay();
+          frontmatter.review_interval_days = this.reviewRules.first;
+          delete frontmatter.reviewed_on;
+        }
+      });
+    } catch (error) {
+      if (!(error instanceof NoStatusChange)) throw error;
+    }
+  }
+
+  async updateReview({ id, action, day, grade, exempt, expected, previewInterval }) {
+    if (!['record', 'correct', 'reset', 'set-exempt'].includes(action) || !isRecord(expected)
+      || action === 'set-exempt' && typeof exempt !== 'boolean') {
+      throw new TopicError('Не удалось распознать действие с карточкой. Откройте её заново.');
+    }
+    await this.writeTopic(id, (frontmatter, status) => {
+      const today = localDay();
+      const review = reviewMetadata(frontmatter, today);
+      if (status !== normalizeStatus(expected.status) || REVIEW_FIELDS.some(key => review[key] !== expected[key])) {
+        throw new TopicError('Карточка изменилась. Откройте её заново.');
+      }
+      if (status !== 'known') {
+        throw new TopicError('Повторение доступно для изученной карточки.');
+      }
+      if (action === 'reset') {
+        frontmatter.status = 'todo';
+        for (const key of REVIEW_FIELDS) delete frontmatter[key];
+        return;
+      }
+      if (action === 'set-exempt') {
+        frontmatter.status = 'known';
+        if (exempt) frontmatter.review_exempt = true;
+        else delete frontmatter.review_exempt;
+        return;
+      }
+      if (review.review_exempt) throw new TopicError('Сначала верните карточку в расписание повторений.');
+      const actualDay = calendarDay(day);
+      if (!actualDay || actualDay > today) throw new TopicError('Укажите действительную дату повторения не позже сегодняшнего дня.');
+      if (action === 'correct') {
+        if (!review.reviewed_on || !review.review_interval_days) {
+          throw new TopicError('Сначала запишите повторение, чтобы задать интервал.');
+        }
+        frontmatter.status = 'known';
+        frontmatter.reviewed_on = actualDay;
+        return;
+      }
+      if (review.reviewed_on && actualDay < review.reviewed_on) {
+        throw new TopicError('Дата нового повтора не может быть раньше последнего. Для изменения используйте «Исправить дату».');
+      }
+      const interval = requestedInterval(this.reviewRules, grade, review.review_interval_days ?? this.reviewRules.first);
+      if (previewInterval !== undefined && previewInterval !== interval) {
+        throw new TopicError('Настройки изменили срок повторения. Проверьте новый срок и сохраните ещё раз.');
+      }
+      frontmatter.status = 'known';
+      frontmatter.reviewed_on = actualDay;
+      frontmatter.review_interval_days = interval;
+    });
+  }
+
+  async updateReviewRules(input) {
+    const rules = normalizeRules(input);
+    const write = this.rulesWrite.catch(() => {}).then(async () => {
+      const previous = await this.loadData();
+      await this.saveData({ ...(isRecord(previous) ? previous : {}), reviewRules: rules });
+      this.reviewRules = rules;
+      for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
+        if (leaf.view instanceof KnowledgeTreeView) leaf.view.queueRefresh(false);
+      }
+    });
+    this.rulesWrite = write;
+    await write;
   }
 
   onunload() {

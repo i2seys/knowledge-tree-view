@@ -1,8 +1,7 @@
 # Knowledge Tree View
 
-A read-only Obsidian view of a personal knowledge tree. The viewer is bundled
-inside `main.js`; there is no separate HTML file, server, build tool or runtime
-dependency to install on a user's computer or phone.
+An Obsidian view of a personal knowledge tree with progress controls. The viewer
+is bundled inside `main.js` and runs on desktop or mobile with Obsidian alone.
 
 Repository: [i2seys/knowledge-tree-view](https://github.com/i2seys/knowledge-tree-view).
 This plugin is distributed through GitHub Releases and BRAT. Personal notes,
@@ -14,19 +13,19 @@ are not included in the plugin.
 1. Install and enable **BRAT** from Obsidian's Community plugins on each device.
 2. In **BRAT → Add beta plugin**, enter **`i2seys/knowledge-tree-view`** or paste
    the [repository URL](https://github.com/i2seys/knowledge-tree-view).
-3. Select **1.3.0** or **Latest**, install, and enable **Knowledge Tree View**.
+3. Select a published version or **Latest**, install, and enable **Knowledge Tree View**.
 4. Run **Knowledge Tree View: Открыть дерево знаний** from the command palette.
 
-Release files: [version 1.3.0](https://github.com/i2seys/knowledge-tree-view/releases/tag/1.3.0).
+Browse the [published releases](https://github.com/i2seys/knowledge-tree-view/releases).
 
 BRAT chooses the vault's actual configuration directory, including custom
 configuration folder names. Windows, macOS, Linux, Android and iOS do not need
 different filesystem paths. BRAT installs GitHub release assets; it does not
 install an arbitrary ZIP URL. Use an Obsidian version supported by BRAT.
 
-The prepared ZIP can alternatively be used for manual installation: copy only
-`main.js` and `manifest.json` into the vault configuration folder's
-`plugins/knowledge-tree-view/` directory, then enable the plugin.
+For a manual installation of version **1.6.1**, copy `main.js` and
+`manifest.json` from the prepared ZIP into `plugins/knowledge-tree-view/` in
+the vault configuration folder, then enable the plugin.
 
 ## Notes and everyday use
 
@@ -42,14 +41,32 @@ order: 0
 ---
 ```
 
-Each note needs a unique string `id`. `parent` references another topic ID;
-blank means the tree root. Status values are `todo`, `studying`, and `known`.
+Each note needs a unique string `id`. `parent` references another topic ID.
+Leave it blank for the tree root. Status values are `todo`, `studying`, and
+`known`. Notes with the legacy `repeated` status appear as `known` and retain
+their review dates and intervals.
 `title` is optional and defaults to the filename. `order` is an optional finite
-decimal number. Change properties and write explanations in Obsidian notes;
-the tree updates when Obsidian's metadata cache updates. The UI is read-only.
+decimal number. The tree updates when Obsidian indexes changed properties.
+
+**В работе · N** opens a flat list of leaf cards in progress.
+**Просрочено · N** shows cards due before today. The **Карточки** tab combines
+status and review filters. **Требуется повторить** includes overdue cards, cards
+due today, and studied cards that have yet to receive a schedule. Both review
+filters respect the review exemption. The summary counts all leaf cards by
+status. Standalone browser mode supports viewing and filtering.
+
+The status control in the tree or list moves a card through **Не изучено →
+В работе → Изучено**. Click **✓** to record a review. Choose a date and one of
+four color-coded ratings to preview the next review date. All reviewed cards
+keep the **Изучено** status. Green indicates a studied card, muted green an overdue
+review and purple a review exemption. Use **Повторение не требуется** to toggle
+the exemption while keeping the saved review dates and interval. In **Настройки
+сроков**, adjust shared intervals for this vault. New settings apply when the
+next review date is scheduled.
 
 Each topic card has a **↗** button that opens its Markdown note in a new Obsidian
-tab. The tree stays open in its own tab. Clicking the card itself still expands
+tab. In the list, the title also opens its note. The tree stays open in its own
+tab. Clicking a node in the tree still expands
 a branch or selects a leaf; dragging or pinching does not open a note. The action
 is available on both branches and leaves, except the synthetic root. Standalone
 browser mode does not show this Obsidian-specific control.
@@ -64,10 +81,10 @@ The prefix stays visible, and hovering, focusing or selecting restores opacity.
 These branches and leaves remain clickable and included in all progress counts;
 the prefix does not change their status or remove topics from the tree.
 
-Only `id`, `parent`, `title`, `status`, `order` and a relative note path enter
-the viewer. Bodies, positions and unrelated properties are never copied.
-The plugin uses `metadataCache`, not reads of note contents. It never writes
-notes or statuses. The release also does not read an external HTML file.
+The viewer receives `id`, `parent`, `title`, `status`, `order`, a relative note
+path, and the optional fields `learned_on`, `reviewed_on`, and
+`review_interval_days`. The plugin builds the tree from `metadataCache` and
+uses Obsidian's frontmatter API to update the status and schedule together.
 
 Viewing works offline once installed. A separate tool such as Remotely Save
 can sync your notes; this plugin has no cloud keys or sync implementation.
@@ -94,7 +111,7 @@ The unbundled bridge's HTML fallback exists only for local development.
    Topic notes, curricula, vault configuration and credentials do not belong
    in this repository.
 3. Create a version tag matching `manifest.json` exactly, without a `v` prefix.
-   For the current version, use **`1.3.0`**.
+   For the current version, use **`1.6.1`**.
 4. GitHub Releases must include **`main.js`** and **`manifest.json`** as individual
    assets. `styles.css` is unnecessary because this viewer has inline styles.
 
